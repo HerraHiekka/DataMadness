@@ -1,0 +1,56 @@
+---
+title: "Data Madness"
+author: "Martin Gassner, Henry Mauranen"
+date: "17 March 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r libraries, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
+## Introduction
+
+
+
+```{r data_import}
+load("./measuringMoralityDuke/MMdata_merged.rdata")
+```
+
+```{r data_import}
+
+```
+
+```{r data_import}
+
+```
+
+```{r data_import}
+
+```
+
+```{r data_import}
+
+```
+
+```{r data_import}
+
+```
+
+```{r data_import}
+
+```
+
+```{r data_import}
+
+```
+
+```{r data_import}
+
+```
