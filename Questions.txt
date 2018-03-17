@@ -1,0 +1,3 @@
+1. Can we identify distinct clusters within different blocks of questions?
+2. Can we find out ways to interpret the answers of each block as one value?
+3. Based on these values and/or clusters, are there clear correlations between interpretable blocks?
