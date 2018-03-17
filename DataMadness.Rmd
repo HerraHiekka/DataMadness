@@ -10,9 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r libraries, warning=FALSE}
+```{r libraries, message=FALSE, warning=FALSE, error=FALSE}
 library(dplyr)
 library(ggplot2)
+library(car)
+library(klaR) # Probably won't use this
+library(mclust)
 ```
 
 ## Introduction
@@ -21,6 +24,7 @@ library(ggplot2)
 
 ```{r data_import}
 load("./measuringMoralityDuke/MMdata_merged.rdata")
+personalColumns <- colnames(MMdata_merged)[255:278]
 ```
 
 ```{r data_import}
