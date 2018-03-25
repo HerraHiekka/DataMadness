@@ -17,7 +17,7 @@ library(car)
 library(klaR) # Probably won't use this
 library(mclust)
 library(stringr)
-library(mice)
+library( mice )
 ```
 
 ## Introduction
@@ -77,8 +77,27 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 
 ```{r principle_component_analysis}
 # for pca
-pcs <- princomp( data )
-loadings( pca )
+MMdata_merged.zerofill <- MMdata_merged
+MMdata_merged.zerofill[ is.na( MMdata_merged ) ] <- 0
+MMdata_merged.zerofill[ MMdata_merged.zerofill == -1 ] <- 0
+blocks.pcs <- lapply( blocks, function( b ) princomp( MMdata_merged.zerofill[ b ] ) )
+#nonsense
+#blocks.lds <- sapply( blocks.pcs, loadings ) 
+
+blocks.propvar <- sapply( blocks.pcs, cumvar )
+
+blocks.weights.raw <- sapply( blocks.pcs, function( pc ) 
+  {
+    cumvs <- cumsum( pc$sdev / sum( pc$sdev ) )
+    sigCs <- cumvs < 0.9
+    if( length( sigCs ) > 1)
+      return( apply( abs( cumvs[ sigCs ] * pc$loadings[ ,sigCs ] ), 1, sum) )
+    else
+      return( sum( pc$loadings) )
+  }
+)
+
+blocks.weights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
 ```
 
 ```{r data_import}
