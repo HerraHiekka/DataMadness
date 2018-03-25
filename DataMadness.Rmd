@@ -18,6 +18,7 @@ library(klaR) # Probably won't use this
 library(mclust)
 library(stringr)
 library( mice )
+library( reshape2 )
 ```
 
 ## Introduction
@@ -75,7 +76,7 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 
 ```
 
-```{r principle_component_analysis}
+```{r principal_component_analysis}
 # for pca
 MMdata_merged.zerofill <- MMdata_merged
 MMdata_merged.zerofill[ is.na( MMdata_merged ) ] <- 0
@@ -98,6 +99,13 @@ blocks.weights.raw <- sapply( blocks.pcs, function( pc )
 )
 
 blocks.weights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
+blocks.weights.norm.df <- as.data.frame( melt( blocks.weights.norm ) )
+blocks.weights.norm.df$name <- unlist( blocks )
+ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
+        , aes( x=name, y=value ) ) + 
+  geom_col() + 
+  facet_wrap( ~L1, ncol=4, scales="free_x" ) +
+  theme( axis.text.x=element_text( angle=45, hjust=1 ))
 ```
 
 ```{r data_import}
