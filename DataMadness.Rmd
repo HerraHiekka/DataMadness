@@ -85,14 +85,13 @@ blocks.pcs <- lapply( blocks, function( b ) princomp( MMdata_merged.zerofill[ b 
 #nonsense
 #blocks.lds <- sapply( blocks.pcs, loadings ) 
 
-blocks.propvar <- sapply( blocks.pcs, cumvar )
-
 blocks.weights.raw <- sapply( blocks.pcs, function( pc ) 
   {
-    cumvs <- cumsum( pc$sdev / sum( pc$sdev ) )
-    sigCs <- cumvs < 0.9
+    parvs <- pc$sdev / sum( pc$sdev )
+    cumvs <- cumsum( parvs )
+    sigCs <- cumvs < 0.85
     if( length( sigCs ) > 1)
-      return( apply( abs( cumvs[ sigCs ] * pc$loadings[ ,sigCs ] ), 1, sum) )
+      return( apply( abs( parvs[ sigCs ] * pc$loadings[ ,sigCs ] ), 1, sum) )
     else
       return( sum( pc$loadings) )
   }
@@ -104,7 +103,7 @@ blocks.weights.norm.df$name <- unlist( blocks )
 ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
         , aes( x=name, y=value ) ) + 
   geom_col() + 
-  facet_wrap( ~L1, ncol=4, scales="free_x" ) +
+  facet_wrap( ~L1, ncol=4, scales="free" ) +
   theme( axis.text.x=element_text( angle=45, hjust=1 ))
 ```
 
