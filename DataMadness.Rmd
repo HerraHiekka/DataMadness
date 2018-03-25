@@ -28,11 +28,13 @@ personalColumns <- colnames(MMdata_merged)[255:278]
 ```
 
 ```{r data_import}
-
+patternIds <- function( names, pat ) names[ !is.na( str_extract( names, pat ) ) ]
 ```
 
 ```{r data_import}
-
+# for pca
+pcs <- princomp( data )
+loadings( pca )
 ```
 
 ```{r data_import}
