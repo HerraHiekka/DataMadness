@@ -25,13 +25,30 @@ library(mclust)
 ```{r data_import}
 load("./measuringMoralityDuke/MMdata_merged.rdata")
 personalColumns <- colnames(MMdata_merged)[255:278]
-```
 
-```{r data_import}
+
+# Leaving out single valued questions, because they can be grouped when constructing the blocks later on
+questionIds <- c("C","I","RFQ","REI","MR","EPQ","L","DPES","SP","DIT","RAND_DIT","MELS","MOPS","Dov_mops","MFSS","MI","CQR","IS","SV","TET","EVA")
+
 patternIds <- function( names, pat ) names[ !is.na( str_extract( names, pat ) ) ]
+
+regexes <- sapply(questionIds, function(x){
+  paste0(x,"[0-9]+(_[A-Z])?")
+  })
+
+questionIdNames <- lapply(regexes, function(x) {
+  patternIds(colnames(MMdata_merged), x)
+})
+
+
+
 ```
 
-```{r data_import}
+```{r clustering}
+
+```
+
+```{r principle_component_analysis}
 # for pca
 pcs <- princomp( data )
 loadings( pca )
