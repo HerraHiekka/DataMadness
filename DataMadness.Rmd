@@ -16,6 +16,7 @@ library(ggplot2)
 library(car)
 library(klaR) # Probably won't use this
 library(mclust)
+library(stringr)
 ```
 
 ## Introduction
