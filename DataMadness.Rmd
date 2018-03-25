@@ -33,7 +33,7 @@ questionIds <- c("C","I","RFQ","REI","MR","EPQ","L","DPES","SP","DIT","RAND_DIT"
 patternIds <- function( names, pat ) names[ !is.na( str_extract( names, pat ) ) ]
 
 regexes <- sapply(questionIds, function(x){
-  paste0(x,"[0-9]+(_[A-Z])?")
+  paste0("^",x,"[0-9]+(_[A-Z])?$")
   })
 
 questionIdNames <- lapply(regexes, function(x) {
