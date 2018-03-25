@@ -17,6 +17,7 @@ library(car)
 library(klaR) # Probably won't use this
 library(mclust)
 library(stringr)
+library(cluster)
 ```
 
 ## Introduction
@@ -75,13 +76,40 @@ pcs <- princomp( data )
 loadings( pca )
 ```
 
-```{r data_import}
+```{r kmodes_methods}
+# Define methods for the clusters
+
+get_tot_diffs <- function(x) {
+  # Get the maximum difference for 15 different cluster sizes (from 2 to 16)
+  kmode_res <- lapply(1:15, function(i){kmodes(x, i+1)})
+  diffs <- lapply(kmode_res, function(y){sum(y$withindiff)})
+  return(unlist(diffs))
+}
+
+test_kmodes_runs <- function(x, tests=5) {
+  # Runs the get_max_diffs function different times to average out the random initial seed of kmodes
+  all_tests <- lapply(1:tests, function(y) {get_tot_diffs(x)})
+  
+  # Returns dataframe with runs as rows and cluster number as columns (V[number of clusters - 1])
+  return(as.data.frame(do.call(rbind, all_tests)))
+}
+
+avg_diffs_for_block <- function(x, tests = 20) {
+  # Averages the cluster scores given by the previous method
+  run_for_block <- test_kmodes_runs(x, tests = tests)
+  print('Finished testing for one block')
+  return(sapply(names(run_for_block), function(y) {mean(run_for_block[,y])}))
+}
+```
+
+```{r kmodes_on_blocks}
+
+block_1_kmodes <- avg_diffs_for_block(MMdata_merged[,block1])
+
+all_avgs <- lapply(blocks, function(x){avg_diffs_for_block(MMdata_merged[,x])})
 
 ```
 
-```{r data_import}
-
-```
 
 ```{r data_import}
 
