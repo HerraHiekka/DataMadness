@@ -37,11 +37,27 @@ regexes <- sapply(questionIds, function(x){
   paste0("^",x,"[0-9]+(_[A-Z])?$")
   })
 
-questionIdNames <- lapply(regexes, function(x) {
+questionIdNames <- sapply(regexes, function(x) {
   patternIds(colnames(MMdata_merged), x)
 })
 
-
+block1 <- questionIdNames$C
+block2 <- c(questionIdNames$I, questionIdNames$RFQ)
+block3 <- questionIdNames$REI
+block4 <- c(questionIdNames$MR, questionIdNames$EPQ)
+block5 <- questionIdNames$L
+block6 <- questionIdNames$DPES
+block7 <- c(questionIdNames$DIT, questionIdNames$RAND_DIT)
+block8 <- c(questionIdNames$MELS, questionIdNames$MOPS)
+block9 <- questionIdNames$MFSS
+block10 <- questionIdNames$MI
+block11 <- questionIdNames$CQR
+block12 <- questionIdNames$IS
+block13 <- questionIdNames$SV
+block14 <- questionIdNames$TET
+block15 <- "Block15"
+block16 <- questionIdNames$EVA
+block17 <- "Dov_game"
 
 ```
 
