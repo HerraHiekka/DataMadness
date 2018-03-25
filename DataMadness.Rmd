@@ -7,6 +7,9 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+  knitr::opts_chunk$set(
+  fig.path = "images/"
+)
 ```
 
 
@@ -14,11 +17,13 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(ggplot2)
 library(car)
-library(klaR) # Probably won't use this
+library(klaR)
 library(mclust)
 library(stringr)
 library(cluster)
 library( mice )
+library( reshape2 )
+library(grDevices)
 ```
 
 ## Introduction
@@ -29,7 +34,6 @@ library( mice )
 load("./measuringMoralityDuke/MMdata_merged.rdata")
 personalColumns <- colnames(MMdata_merged)[255:278]
 
-# -1 are refusals to answer, replacing with NAs so they won't interfere with clustering and PCA
 MMdata_merged[is.na(MMdata_merged)] <- -1
 
 # Leaving out single valued questions, because they can be grouped when constructing the blocks later on
@@ -59,24 +63,35 @@ block11 <- questionIdNames$CQR
 block12 <- questionIdNames$IS
 block13 <- questionIdNames$SV
 block14 <- questionIdNames$TET
-block15 <- c("Block15")
+block15 <- "Block15"
 block16 <- questionIdNames$EVA
-block17 <- c("Dov_game")
+block17 <- "Dov_game"
 
 blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,block10,block11,block12,block13,block14,block15,block16,block17)
 ```
 
-```{r clustering}
+```{r clustering, warning=FALSE}
+# Suppressing warnings because Loess causes problems with spms
 
+# This block is commented out, because it should not be run as one. Commands are heavy and produce a lot of output. Choose which plots and cluster you want to examine before running commands.
 
 #mclusters <- lapply(blocks, function (x) {
 #  Mclust(MMdata_merged[x])
 #})
 
+# Printing all summaires for all clusters
+#lapply(mclusters, summary, parameters=TRUE)
 
+# Ignoring 15 and 17, since there's only one question
+#clusterBlocks <- blocks[-c(15,17)]
+# spm generation for inside the blocks
+#lapply(clusterBlocks, function(x){
+#  columns <- paste0("~", paste(x, collapse = "+"))
+#  spm(as.formula(columns), MMdata_merged)
+#})
 ```
 
-```{r principle_component_analysis}
+```{r principal_component_analysis}
 # for pca
 pcs <- princomp( data )
 loadings( pca )
@@ -88,21 +103,28 @@ blocks.pcs <- lapply( blocks, function( b ) princomp( MMdata_merged.zerofill[ b 
 #nonsense
 #blocks.lds <- sapply( blocks.pcs, loadings ) 
 
-blocks.propvar <- sapply( blocks.pcs, cumvar )
-
 blocks.weights.raw <- sapply( blocks.pcs, function( pc ) 
   {
-    cumvs <- cumsum( pc$sdev / sum( pc$sdev ) )
-    sigCs <- cumvs < 0.9
+    parvs <- pc$sdev / sum( pc$sdev )
+    cumvs <- cumsum( parvs )
+    sigCs <- cumvs < 0.85
     if( length( sigCs ) > 1)
-      return( apply( abs( cumvs[ sigCs ] * pc$loadings[ ,sigCs ] ), 1, sum) )
+      return( apply( abs( parvs[ sigCs ] * pc$loadings[ ,sigCs ] ), 1, sum) )
     else
       return( sum( pc$loadings) )
   }
 )
 
 blocks.weights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
+blocks.weights.norm.df <- as.data.frame( melt( blocks.weights.norm ) )
+blocks.weights.norm.df$name <- unlist( blocks )
+ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
+        , aes( x=name, y=value ) ) + 
+  geom_col() + 
+  facet_wrap( ~L1, ncol=4, scales="free" ) +
+  theme( axis.text.x=element_text( angle=45, hjust=1 ))
 ```
+
 
 ```{r kmodes_methods}
 # Define methods for the clusters
@@ -162,3 +184,4 @@ for (i in 1:length(multi.dim.blocks)){
 ```{r data_import}
 
 ```
+
