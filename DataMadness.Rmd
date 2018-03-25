@@ -18,6 +18,7 @@ library(klaR) # Probably won't use this
 library(mclust)
 library(stringr)
 library(cluster)
+library( mice )
 ```
 
 ## Introduction
@@ -28,6 +29,8 @@ library(cluster)
 load("./measuringMoralityDuke/MMdata_merged.rdata")
 personalColumns <- colnames(MMdata_merged)[255:278]
 
+# -1 are refusals to answer, replacing with NAs so they won't interfere with clustering and PCA
+MMdata_merged[is.na(MMdata_merged)] <- -1
 
 # Leaving out single valued questions, because they can be grouped when constructing the blocks later on
 questionIds <- c("C","I","RFQ","REI","MR","EPQ","L","DPES","SP","DIT","RAND_DIT","MELS","MOPS","Dov_mops","MFSS","MI","CQR","IS","SV","TET","EVA")
@@ -56,17 +59,20 @@ block11 <- questionIdNames$CQR
 block12 <- questionIdNames$IS
 block13 <- questionIdNames$SV
 block14 <- questionIdNames$TET
-block15 <- "Block15"
+block15 <- c("Block15")
 block16 <- questionIdNames$EVA
-block17 <- "Dov_game"
+block17 <- c("Dov_game")
 
 blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,block10,block11,block12,block13,block14,block15,block16,block17)
 ```
 
 ```{r clustering}
-mclusters <- sapply(blocks, function (x) {
-  
-})
+
+
+#mclusters <- lapply(blocks, function (x) {
+#  Mclust(MMdata_merged[x])
+#})
+
 
 ```
 
@@ -74,6 +80,28 @@ mclusters <- sapply(blocks, function (x) {
 # for pca
 pcs <- princomp( data )
 loadings( pca )
+
+MMdata_merged.zerofill <- MMdata_merged
+MMdata_merged.zerofill[ is.na( MMdata_merged ) ] <- 0
+MMdata_merged.zerofill[ MMdata_merged.zerofill == -1 ] <- 0
+blocks.pcs <- lapply( blocks, function( b ) princomp( MMdata_merged.zerofill[ b ] ) )
+#nonsense
+#blocks.lds <- sapply( blocks.pcs, loadings ) 
+
+blocks.propvar <- sapply( blocks.pcs, cumvar )
+
+blocks.weights.raw <- sapply( blocks.pcs, function( pc ) 
+  {
+    cumvs <- cumsum( pc$sdev / sum( pc$sdev ) )
+    sigCs <- cumvs < 0.9
+    if( length( sigCs ) > 1)
+      return( apply( abs( cumvs[ sigCs ] * pc$loadings[ ,sigCs ] ), 1, sum) )
+    else
+      return( sum( pc$loadings) )
+  }
+)
+
+blocks.weights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
 ```
 
 ```{r kmodes_methods}
@@ -103,10 +131,18 @@ avg_diffs_for_block <- function(x, tests = 20) {
 ```
 
 ```{r kmodes_on_blocks}
+multi.dim.blocks <- blocks[[c(1:11,13,14,16)]]
+all_avgs <- vector('list', length(multi.dim.blocks))
+```
 
-block_1_kmodes <- avg_diffs_for_block(MMdata_merged[,block1])
+```{r kmodes_on_blocks}
+# Actual computation of average intr-cluster difference for different k with kmodes 
+for (i in 1:length(multi.dim.blocks)){
+  print(paste0(c('Iteration ', i), collapse = ''))
+  
+  all_avgs[[i]] <- avg_diffs_for_block(MMdata_merged[,multi.dim.blocks[[i]]], tests = 8)
+}
 
-all_avgs <- lapply(blocks, function(x){avg_diffs_for_block(MMdata_merged[,x])})
 
 ```
 
