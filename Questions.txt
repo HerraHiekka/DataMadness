@@ -1,3 +1,13 @@
 1. Can we identify distinct clusters within different blocks of questions?
 2. Can we find out ways to interpret the answers of each block as one value?
 3. Based on these values and/or clusters, are there clear correlations between interpretable blocks?
+
+high
+L5      It takes toughness from the part of national authorities to mold people into good members of society.
+DPES15  I am a very compassionate person.
+MFSS10  Sign a piece of paper that says “I hereby sell my soul, after my death, to whoever has this piece of paper”
+
+low
+L16     Obedience must be instilled in children.
+DPES9   I feel strong positive emotion when I do something well.
+MFSS12  Attend a performance art piece in which all participants (including you) have to act like animals for 30 minutes, including crawling around naked and urinating on stage

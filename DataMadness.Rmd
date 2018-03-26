@@ -197,6 +197,6 @@ sizes_2 <- clust_obj[[2]]$size
 ```
 
 ```{r}
-all_vars_all_avgs <- avg_diffs_block(MMdata_merged[,block12])
+all_vars_all_avgs <- avg_diffs_for_block(MMdata_merged[,block12])
 ```
 
