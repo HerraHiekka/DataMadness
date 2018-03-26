@@ -7,7 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-  knitr::opts_chunk$set(
+knitr::opts_chunk$set(
   fig.path = "images/"
 )
 ```
@@ -20,6 +20,7 @@ library(car)
 library(klaR)
 library(mclust)
 library(stringr)
+library(cluster)
 library( mice )
 library( reshape2 )
 library(grDevices)
@@ -74,24 +75,34 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 
 # This block is commented out, because it should not be run as one. Commands are heavy and produce a lot of output. Choose which plots and cluster you want to examine before running commands.
 
-#mclusters <- lapply(blocks, function (x) {
-#  Mclust(MMdata_merged[x])
-#})
+# Imputing missing values column-wise with empirical distribution
+MMdata.imputed <- MMdata_merged
+MMdata.imputed[MMdata.imputed == -1] <- NA
+MMdata.imputed <- apply(MMdata_merged, 2, function(x){
+  na.indecies <- which(is.na(x))
+  x[na.indecies] <- mice.impute.sample(x, !is.na(x))
+  return(x)
+})
+
+mclusters <- lapply(blocks, function (x) {
+  Mclust(MMdata.imputed[x])
+})
+
+fullCluster <- Mclust(MMdata.imputed[unlist(blocks)])
 
 # Printing all summaires for all clusters
-#lapply(mclusters, summary, parameters=TRUE)
+lapply(mclusters, summary, parameters=TRUE)
 
 # Ignoring 15 and 17, since there's only one question
-#clusterBlocks <- blocks[-c(15,17)]
+clusterBlocks <- blocks[-c(15,17)]
 # spm generation for inside the blocks
-#lapply(clusterBlocks, function(x){
-#  columns <- paste0("~", paste(x, collapse = "+"))
-#  spm(as.formula(columns), MMdata_merged)
-#})
+lapply(clusterBlocks, function(x){
+  columns <- paste0("~", paste(x, collapse = "+"))
+  spm(as.formula(columns), MMdata.imputed, 6000, 3000)
+})
 ```
 
 ```{r principal_component_analysis}
-# compute pca
 MMdata_merged.zerofill <- MMdata_merged
 MMdata_merged.zerofill[ is.na( MMdata_merged ) ] <- 0
 MMdata_merged.zerofill[ MMdata_merged.zerofill == -1 ] <- 0
@@ -159,8 +170,62 @@ ggplot( blocks.altweights.norm.df[ blocks.altweights.norm.df$L1 != c(15, 17), ]
   theme( axis.text.x=element_text( angle=45, hjust=1 ) )
 ```
 
-```{r weights_significance}
+
+```{r kmodes_methods}
+# Define methods for the clusters
+
+get_tot_diffs <- function(x) {
+  # Get the maximum difference for 15 different cluster sizes (from 2 to 16)
+  kmode_res <- lapply(1:15, function(i){kmodes(x, i+1)})
+  diffs <- lapply(kmode_res, function(y){sum(y$withindiff)})
+  return(unlist(diffs))
+}
+
+test_kmodes_runs <- function(x, tests=5) {
+  # Runs the get_max_diffs function different times to average out the random initial seed of kmodes
+  all_tests <- lapply(1:tests, function(y) {get_tot_diffs(x)})
+  
+  # Returns dataframe with runs as rows and cluster number as columns (V[number of clusters - 1])
+  return(as.data.frame(do.call(rbind, all_tests)))
+}
+
+avg_diffs_for_block <- function(x, tests = 20) {
+  # Averages the cluster scores given by the previous method
+  run_for_block <- test_kmodes_runs(x, tests = tests)
+  print('Finished testing for one block')
+  return(sapply(names(run_for_block), function(y) {mean(run_for_block[,y])}))
+}
+```
+
+```{r kmodes_on_blocks}
+multi.dim.blocks <- blocks[[c(1:11,13,14,16)]]
+all_avgs <- vector('list', length(multi.dim.blocks))
+```
+
+```{r kmodes_on_blocks}
+# Actual computation of average intr-cluster difference for different k with kmodes 
+for (i in 1:length(multi.dim.blocks)){
+  print(paste0(c('Iteration ', i), collapse = ''))
+  
+  all_avgs[[i]] <- avg_diffs_for_block(MMdata_merged[,multi.dim.blocks[[i]]], tests = 8)
+}
 
 
+```
+
+
+```{r data_import}
+
+```
+
+```{r data_import}
+
+```
+
+```{r data_import}
+
+```
+
+```{r data_import}
 
 ```
