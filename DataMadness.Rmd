@@ -91,32 +91,76 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 ```
 
 ```{r principal_component_analysis}
-# for pca
+# compute pca
 MMdata_merged.zerofill <- MMdata_merged
 MMdata_merged.zerofill[ is.na( MMdata_merged ) ] <- 0
 MMdata_merged.zerofill[ MMdata_merged.zerofill == -1 ] <- 0
 blocks.pcs <- lapply( blocks, function( b ) princomp( MMdata_merged.zerofill[ b ] ) )
-#nonsense
-#blocks.lds <- sapply( blocks.pcs, loadings ) 
 
-blocks.weights.raw <- sapply( blocks.pcs, function( pc ) 
+# compute weights from pc
+weightsFromPc <- function( t, pc ) 
   {
     parvs <- pc$sdev / sum( pc$sdev )
     cumvs <- cumsum( parvs )
-    sigCs <- cumvs < 0.85
-    if( length( sigCs ) > 1)
+    sigCs <- cumvs < t
+    if( length( sigCs ) > 1 )
       return( apply( abs( parvs[ sigCs ] * pc$loadings[ ,sigCs ] ), 1, sum) )
     else
       return( sum( pc$loadings) )
   }
-)
-
+blocks.weights.raw <- sapply( blocks.pcs, function( pc ) weightsFromPc( 0.85, pc ) )
 blocks.weights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
+
+# test weights for significance for normal or uniform distributions
+# H0: data is normal
+testNorm <- function( xs ) if( length( xs ) > 2 ) shapiro.test( xs )$p.value else 0
+# H0: data is uniform
+testUnif <- function( xs ) ks.test( xs, "punif" )$p.value
+# p value of x given that xs if normally distributed
+normSig <- function( x, xs ) pnorm( x, mean=mean( xs ), sd=sd( xs ) )
+# p value given that x is uniformly distributed
+unifSig <- function( x, xs ) x / ( max( xs ) - min( xs ) )
+# test whether p lies outside center 1-alpha prob region
+twoSideP <- function( alpha, p ) p >= 0 && (p < alpha / 2 || p > 1 - alpha / 2)
+
+alpha <- 0.1
+
+blocks.weights.norm.pnorm <- sapply( blocks.weights.norm, testNorm )
+blocks.weights.norm.punif <- sapply( blocks.weights.norm, testUnif )
+
+blocks.weights.norm.sig <- sapply( blocks.weights.norm, function( ws ) replicate( length( ws ), -1 ) )
+blocks.weights.norm.sig[ blocks.weights.norm.pnorm > 1 - alpha ] <- sapply( 
+  blocks.weights.norm[ blocks.weights.norm.pnorm > 1 - alpha ]
+  , function( xs ) sapply( xs, function( x ) normSig( x, xs ) )
+  )
+
 blocks.weights.norm.df <- as.data.frame( melt( blocks.weights.norm ) )
 blocks.weights.norm.df$name <- unlist( blocks )
+blocks.weights.norm.df$sig <- sapply( melt( blocks.weights.norm.sig )$value
+                                      , function( pval ) twoSideP( alpha=alpha, pval ) )
 ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
+        , aes( x=name, y=value, color=sig ) ) + 
+  geom_col() + 
+  facet_wrap( ~L1, ncol=4, scales="free" ) +
+  theme( axis.text.x=element_text( angle=45, hjust=1 ) )
+```
+
+
+```{r pca_cmp_threshold}
+blocks.altweights.raw <- sapply( blocks.pcs, function( pc ) weightsFromPc( 1.05, pc ) )
+
+blocks.altweights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
+blocks.altweights.norm.df <- as.data.frame( melt( blocks.weights.norm ) )
+blocks.altweights.norm.df$name <- unlist( blocks )
+ggplot( blocks.altweights.norm.df[ blocks.altweights.norm.df$L1 != c(15, 17), ]
         , aes( x=name, y=value ) ) + 
   geom_col() + 
   facet_wrap( ~L1, ncol=4, scales="free" ) +
-  theme( axis.text.x=element_text( angle=45, hjust=1 ))
+  theme( axis.text.x=element_text( angle=45, hjust=1 ) )
+```
+
+```{r weights_significance}
+
+
+
 ```
