@@ -107,8 +107,11 @@ blocks.weights.raw <- sapply( blocks.pcs, function( pc )
   {
     parvs <- pc$sdev / sum( pc$sdev )
     cumvs <- cumsum( parvs )
-    sigCs <- cumvs < 0.85
-    if( length( sigCs ) > 1)
+    sigCs <- cumvs < t
+    print( sigCs )
+    print( parvs[ sigCs ] )
+    print( pc$loadings[ ,sigCs ] )
+    if( length( parvs[ sigCs ] ) > 1 )
       return( apply( abs( parvs[ sigCs ] * pc$loadings[ ,sigCs ] ), 1, sum) )
     else
       return( sum( pc$loadings) )
@@ -118,8 +121,33 @@ blocks.weights.raw <- sapply( blocks.pcs, function( pc )
 blocks.weights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
 blocks.weights.norm.df <- as.data.frame( melt( blocks.weights.norm ) )
 blocks.weights.norm.df$name <- unlist( blocks )
+ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ], aes( x=name, y=value, color=sig ) ) + 
+  geom_col() + 
+  facet_wrap( ~L1, ncol=4, scales="free" ) +
+  theme( axis.text.x=element_text( angle=45, hjust=1 ) )
+```
+
+
+```{r pca_cmp_threshold}
+blocks.altweights.raw <- sapply( blocks.pcs, function( pc ) weightsFromPc( 0.50, pc ) )
+blocks.altweights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
+
+blocks.altweights.norm.pnorm <- sapply( blocks.altweights.norm, testNorm )
+blocks.altweights.norm.punif <- sapply( blocks.altweights.norm, testUnif )
+
+blocks.altweights.norm.sig <- sapply( blocks.altweights.norm, function( ws ) replicate( length( ws ), -1 ) )
+blocks.altweights.norm.sig[ blocks.altweights.norm.pnorm > 1 - alpha ] <- sapply( 
+  blocks.altweights.norm[ blocks.altweights.norm.pnorm > 1 - alpha ]
+  , function( xs ) sapply( xs, function( x ) normSig( x, xs ) )
+  )
+
+blocks.altweights.norm.df <- as.data.frame( melt( blocks.weights.norm ) )
+blocks.altweights.norm.df$name <- unlist( blocks )
+blocks.altweights.norm.df$sig <- sapply( melt( blocks.altweights.norm.sig )$value
+                                      , function( pval ) twoSideP( alpha=alpha, pval ) )
+
 ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
-        , aes( x=name, y=value ) ) + 
+        , aes( x=name, y=value, color=sig ) ) + 
   geom_col() + 
   facet_wrap( ~L1, ncol=4, scales="free" ) +
   theme( axis.text.x=element_text( angle=45, hjust=1 ))
