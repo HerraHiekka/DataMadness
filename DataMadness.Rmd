@@ -108,9 +108,6 @@ blocks.weights.raw <- sapply( blocks.pcs, function( pc )
     parvs <- pc$sdev / sum( pc$sdev )
     cumvs <- cumsum( parvs )
     sigCs <- cumvs < t
-    print( sigCs )
-    print( parvs[ sigCs ] )
-    print( pc$loadings[ ,sigCs ] )
     if( length( parvs[ sigCs ] ) > 1 )
       return( apply( abs( parvs[ sigCs ] * pc$loadings[ ,sigCs ] ), 1, sum) )
     else
@@ -121,7 +118,8 @@ blocks.weights.raw <- sapply( blocks.pcs, function( pc )
 blocks.weights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
 blocks.weights.norm.df <- as.data.frame( melt( blocks.weights.norm ) )
 blocks.weights.norm.df$name <- unlist( blocks )
-ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ], aes( x=name, y=value, color=sig ) ) + 
+ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
+        , aes( x=name, y=value, color=sig ) ) + 
   geom_col() + 
   facet_wrap( ~L1, ncol=4, scales="free" ) +
   theme( axis.text.x=element_text( angle=45, hjust=1 ) )
