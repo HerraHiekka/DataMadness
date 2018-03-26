@@ -91,6 +91,18 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 #})
 ```
 
+
+To obtain a weighting for each block of questions
+
+1. obtain the principal components for each block
+
+2. keep the ones explaining 85% of the variance
+
+3. for each variable: sum the loadings of the most important principal components, 
+weighted by the variance explained.
+
+Additionally we tested the weights for significance within each block.
+
 ```{r principal_component_analysis}
 MMdata_merged.zerofill <- MMdata_merged
 MMdata_merged.zerofill[ is.na( MMdata_merged ) ] <- 0
