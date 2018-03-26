@@ -84,22 +84,22 @@ MMdata.imputed <- apply(MMdata_merged, 2, function(x){
   return(x)
 })
 
-#mclusters <- lapply(blocks, function (x) {
-#  Mclust(MMdata_merged[x])
-#})
+mclusters <- lapply(blocks, function (x) {
+  Mclust(MMdata.imputed[x])
+})
 
-#fullCluster <- Mclust(MMdata_merged[unlist(blocks)])
+fullCluster <- Mclust(MMdata.imputed[unlist(blocks)])
 
 # Printing all summaires for all clusters
-#lapply(mclusters, summary, parameters=TRUE)
+lapply(mclusters, summary, parameters=TRUE)
 
 # Ignoring 15 and 17, since there's only one question
-#clusterBlocks <- blocks[-c(15,17)]
+clusterBlocks <- blocks[-c(15,17)]
 # spm generation for inside the blocks
-#lapply(clusterBlocks, function(x){
-#  columns <- paste0("~", paste(x, collapse = "+"))
-#  spm(as.formula(columns), MMdata_merged)
-#})
+lapply(clusterBlocks, function(x){
+  columns <- paste0("~", paste(x, collapse = "+"))
+  spm(as.formula(columns), MMdata.imputed, 6000, 3000)
+})
 ```
 
 ```{r principal_component_analysis}
