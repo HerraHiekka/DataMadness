@@ -93,8 +93,8 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 
 ```{r principal_component_analysis}
 # for pca
-pcs <- princomp( data )
-loadings( pca )
+# pcs <- princomp( MMdata_merged )
+# loadings( pca )
 
 MMdata_merged.zerofill <- MMdata_merged
 MMdata_merged.zerofill[ is.na( MMdata_merged ) ] <- 0
@@ -152,12 +152,12 @@ avg_diffs_for_block <- function(x, tests = 20) {
 }
 ```
 
-```{r kmodes_on_blocks}
-multi.dim.blocks <- blocks[[c(1:11,13,14,16)]]
+```{r kmodes_on_blocks_init}
+multi.dim.blocks <- blocks[c(1:11,13,14,16)]
 all_avgs <- vector('list', length(multi.dim.blocks))
 ```
 
-```{r kmodes_on_blocks}
+```{r kmodes_on_blocks, eval=FALSE}
 # Actual computation of average intr-cluster difference for different k with kmodes 
 for (i in 1:length(multi.dim.blocks)){
   print(paste0(c('Iteration ', i), collapse = ''))
@@ -169,19 +169,34 @@ for (i in 1:length(multi.dim.blocks)){
 ```
 
 
-```{r data_import}
-
+```{r print_kmodes, eval=FALSE}
+for (i in c(1:11,13,14,16)){
+  print(paste0(c('Block ', i), collapse=''))
+  plot(all_avgs[[i]])
+}
 ```
 
-```{r data_import}
+```{r}
+# For block 2, 13 and 16 no proper value
+# Same order as multi dim blocks
+n_clust <- c(6, 4, 5, 6, 5, 6, 7, 7, 6, 6, 7, 5, 8, 9)
+clust_obj <- vector('list', length(n_clust))
 
+for (i in 1:length(multi.dim.blocks)){
+  clust_obj[[i]] <- kmodes(MMdata_merged[,multi.dim.blocks[[i]]], n_clust[i])
+}
 ```
 
-```{r data_import}
+```{r}
+# Test on second
+index = 2
+clustered_instances <- lapply(1:n_clust[index], function(x) MMdata_merged[which(clust_obj[[index]]$cluster == x), multi.dim.blocks[[index]]])
 
+modes_2 <- clust_obj[[2]]$modes
+sizes_2 <- clust_obj[[2]]$size
 ```
 
-```{r data_import}
-
+```{r}
+all_vars_all_avgs <- avg_diffs_block(MMdata_merged[,block12])
 ```
 
