@@ -7,7 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-  knitr::opts_chunk$set(
+knitr::opts_chunk$set(
   fig.path = "images/"
 )
 ```
@@ -75,9 +75,19 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 
 # This block is commented out, because it should not be run as one. Commands are heavy and produce a lot of output. Choose which plots and cluster you want to examine before running commands.
 
+# Imputing missing values column-wise with empirical distribution
+MMdata_merged[MMdata_merged == -1] <- NA
+MMdata.imputed <- apply(MMdata_merged, 2, function(x){
+  na.indecies <- which(is.na(x))
+  x[na.indecies] <- mice.impute.sample(x, !is.na(x))
+  return(x)
+})
+
 #mclusters <- lapply(blocks, function (x) {
 #  Mclust(MMdata_merged[x])
 #})
+
+#fullCluster <- Mclust(MMdata_merged[unlist(blocks)])
 
 # Printing all summaires for all clusters
 #lapply(mclusters, summary, parameters=TRUE)
@@ -92,9 +102,6 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 ```
 
 ```{r principal_component_analysis}
-# for pca
-pcs <- princomp( data )
-loadings( pca )
 
 MMdata_merged.zerofill <- MMdata_merged
 MMdata_merged.zerofill[ is.na( MMdata_merged ) ] <- 0
