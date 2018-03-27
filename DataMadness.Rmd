@@ -193,23 +193,38 @@ for( ib in 1:length( blocks ) )
   off <- if( ib > 1 ) sum( sapply( blocks, length )[ 1:(ib - 1) ] ) else 0
   blockTransform[ (off + 1):(off + length( blocks[[ ib ]] ) ), ib ] <- blocks.weights.norm[[ ib ]]
 }
-MMdata.blockt <- as.matrix( MMdata_merged[ ,unlist( blocks ) ] ) %*% blockTransform
-MMdata.blockt.kclusters <- lapply( 1:20, function( k ) kmeans( MMdata.blockt, k, iter.max=100 )  )
+```
 
+
+```{r clustering_transformed_blocks}
+MMdata.blockt <- as.matrix( MMdata_merged[ ,unlist( blocks ) ] ) %*% blockTransform
+MMdata.blockt.kclusters <- lapply( 2:20, function( k ) kmeans( MMdata.blockt
+                                                               , centers=unique( MMdata.blockt )[ 1:k, ]
+                                                               , iter.max=100 )  )
+
+weightedIntradiff <- function( k ) sum( k$withinss * k$size )
+plot( sapply( MMdata.blockt.kclusters, weightedIntradiff )
+      , xlab="number of clusters"
+      , ylab="weighted intraclass difference" 
+      , main="difference per cluster size")
+
+diff1d2pt <- function( xl, xm, h ) (xl - xm) / h
+diff2d3pt <- function( xl, xm, xr, h ) (xl - 2*xm + xr) / h^2
+```
+
+```{r clustering_transformed_sizes}
+transformClusterSize <- 5
+MMdata.blockt.clustered <- data.frame( cbind( MMdata.blockt
+                                              , MMdata.blockt.kclusters[[ transformClusterSize - 1 ]]$cluster ) )
+colnames( MMdata.blockt.clustered ) <- c( paste0( "block", 1:length( blocks ) ), "cluster" )
 ggplot( data.frame( count( MMdata.blockt.clustered$cluster ) )
         , aes( x=x, y=freq ) ) + geom_col() +
   xlab( "cluster" ) + ylab( "size" ) + ggtitle( "cluster sizes" )
 ```
 
 
-```{r clustering_transformed_blocks}
-weightedIntradiff <- function( k ) sum( k$withinss * k$size )
+```{r clustering_transformed}
 
-diff1d2pt <- function( xl, xm, h ) (xl - xm) / h
-diff2d3pt <- function( xl, xm, xr, h ) (xl - 2*xm + xr) / h^2
-
-MMdata.blockt.clustered <- data.frame( cbind( MMdata.blockt, MMdata.blockt.kclusters[[5]]$cluster ) )
-colnames( MMdata.blockt.clustered ) <- c( paste0( "block", 1:17 ), "cluster" )
 
 ggplot( melt( MMdata.blockt.clustered, id.vars="cluster")
         , aes( group=cluster, x=cluster, y=value ) ) + 
@@ -218,11 +233,14 @@ ggplot( melt( MMdata.blockt.clustered, id.vars="cluster")
   ggtitle( "distribution of responses" )
 ```
 
+
 ```{r transformed_cluster_lines}
-MMdata.blockt.clustered.means <- melt( matrix( unlist( lapplyBy( ~cluster
-                                                                 , data=MMdata.blockt.clustered
-                                                                 , FUN=colMeans ) )
-                                               , ncol=5 ) )
+MMdata.blockt.clustered.rawmeans <- lapplyBy( ~cluster
+                                              , data=MMdata.blockt.clustered
+                                              , FUN=colMeans )
+MMdata.blockt.clustered.means <- melt( matrix( unlist( 
+  MMdata.blockt.clustered.rawmeans[ order( names( MMdata.blockt.clustered.rawmeans ) ) ] )
+  , ncol=length( MMdata.blockt.clustered.rawmeans ) ) )
 colnames( MMdata.blockt.clustered.means ) <- c( "block", "cluster", "mean" )
 MMdata.blockt.clustered.means$cluster <- factor( MMdata.blockt.clustered.means$cluster )
 ggplot( MMdata.blockt.clustered.means
@@ -231,6 +249,71 @@ ggplot( MMdata.blockt.clustered.means
   xlab( "question block" ) + ylab( "mean response" ) +
   ggtitle( "Overview of mean responses" )
 ```
+
+big differences
+Block 2: Identity measures - clusters 2,5 (less important) vs. 1,3 (very important)
+Block 4: Moral relativism - cluster 2 (relative) vs 5 (disagreeing)
+Block 9: Sacredness of moral principles - cluster 1 (less) vs 2,3,5 (more)
+Block 17: all different; rank 1, 2, 3, 4, 5
+
+```{r transformed_cluster_significance}
+print( "Block 2: Identity measures - clusters 2,5 (less important) vs. 1,3 (very important)" )
+t.test( MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(2,5) ) ]
+        , MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(1,3) ) ] )$p.value
+
+print( "Block 4: Moral relativism - cluster 2 (relative) vs 5 (disagreeing)" )
+t.test( MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(2) ) ]
+        , MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(5) ) ] )$p.value
+
+print( "Block 9: Sacredness of moral principles - cluster 1 (less) vs 2,3,5 (more)" )
+t.test( MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(1) ) ]
+        , MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(2,3,5) ) ] )$p.value
+
+print("Block 17: Dictator game - cluster 1 vs 2, 3, 4, 5")
+t.test( MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(1) ) ]
+        , MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(2,3,4,5) ) ] )$p.value
+
+print("Block 17: Dictator game - cluster 2 vs 1, 3, 4, 5")
+t.test( MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(2) ) ]
+        , MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(1,3,4,5) ) ] )$p.value
+
+print("Block 17: Dictator game - cluster 3 vs 1, 2, 4, 5")
+t.test( MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(3) ) ]
+        , MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(1,2,4,5) ) ] )$p.value
+
+print("Block 17: Dictator game - cluster 4 vs 1, 2, 3, 5")
+t.test( MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(4) ) ]
+        , MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(1,2,3,5) ) ] )$p.value
+
+print("Block 17: Dictator game - cluster 5 vs 1, 2, 3, 4")
+t.test( MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(5) ) ]
+        , MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$cluster, c(1,2,3,4) ) ] )$p.value
+
+```
+
+Cluster 1
+- find many things (country, religion etc) relevant to their identity
+- do not hold moral values high/more pragmatic
+- give the least in the dictator game
+
+Cluster 2
+- find less things relevant to their identity
+- moral relativists
+- do think of their moral values sacred/would take a lot of money
+- second to last in dictator game
+
+Cluster 3
+- average, really everywhere
+
+Cluster 4 
+- irrelevant, too small, collects refused answers
+
+Cluster 5
+- find less things relevant to their identity
+- oppose moral relativism
+- do hold their morals dear
+- give the most in the dictator game (exactly average)
+
 
 ```{r kmodes_methods}
 # Define methods for the clusters
