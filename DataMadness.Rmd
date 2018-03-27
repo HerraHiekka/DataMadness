@@ -208,7 +208,7 @@ ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
 ```
 
 
-```{r pca_cmp_threshold}
+```{r pca_cmp_threshold, include=FALSE}
 blocks.altweights.raw <- sapply( blocks.pcs, function( pc ) weightsFromPc( 0.50, pc ) )
 blocks.altweights.norm <- sapply( blocks.weights.raw, function( ws ) ws / sum( ws ) )
 
@@ -270,11 +270,11 @@ colnames( MMdata.blockt.clustered ) <- c( paste0( "block", 1:length( blocks ) ),
 # use this if NOT knitting
 # MMdata.blockt.clustered.counts <- data.frame( count( MMdata.blockt.clustered$cluster ) )
 # use this if knitting
-MMdata.blockt.clustered.counts <- data.frame( count( MMdata.blockt.clustered, cluster ) )
+# MMdata.blockt.clustered.counts <- data.frame( count( MMdata.blockt.clustered, cluster ) )
 
-#ggplot( MMdata.blockt.clustered.counts
-#        , aes( x=x, y=freq ) ) + geom_col() +
-#  xlab( "cluster" ) + ylab( "size" ) + ggtitle( "cluster sizes" )
+ggplot( as.data.frame( MMdata.blockt.clustered$cluster )
+        , aes( x=MMdata.blockt.clustered$cluster ) ) + geom_bar() +
+  xlab( "cluster" ) + ylab( "size" ) + ggtitle( "cluster sizes" )
 ```
 
 
@@ -588,11 +588,11 @@ plot.clust.distr <- function(clust_name){
 p_1 <- create.intersect.df('block6', 'block13', clust_df, norm_first = FALSE)
 p_2 <- create.intersect.df('block13', 'block16', clust_df, norm_first = FALSE)
 p_3 <- create.intersect.df('block6', 'block16', clust_df, norm_first = FALSE)
-multiplot(p_1, p_2, p_3, cols = 2)
-print("Interesting transition from block6(2) to block13(3), from block16(2) [The 'hippies' (all 7 in block6)]")
+# multiplot(p_1, p_2, p_3, cols = 2)
+# print("Interesting transition from block6(2) to block13(3), from block16(2) [The 'hippies' (all 7 in block6)]")
 
-plot.clust.distr('block6')
-print("Plotting only block 6 info [check cluster 2]")
+# plot.clust.distr('block6')
+# print("Plotting only block 6 info [check cluster 2]")
 
 g_1 <- create.intersect.df('block5', 'block4', clust_df, norm_first = FALSE)
 g_2 <- create.intersect.df('block12', 'block4', clust_df, norm_first = FALSE)
@@ -603,11 +603,11 @@ print("Interesting transition from block5(5) to block4(5), block12(5) to block4(
 plot.clust.distr('block5')
 print("Plotting only block 5 info [check cluster 5]")
 
-create.intersect.df('block4', 'block12', clust_df, norm_first = FALSE)
-print("Interesting transition between block4(1), block12(1) [The 'Believe in Jesus but don't like the word religious'] [about 180 people in both cluster]")
+# create.intersect.df('block4', 'block12', clust_df, norm_first = FALSE)
+# print("Interesting transition between block4(1), block12(1) [The 'Believe in Jesus but don't like the word religious'] [about 180 people in both cluster]")
 
-print("Plotting only block 4 info [check cluster 1]")
-plot.clust.distr('block4')
+# print("Plotting only block 4 info [check cluster 1]")
+# plot.clust.distr('block4')
 
 create.intersect.df('block16', 'block2', clust_df, norm_first = FALSE)
 print("Interesting transition from block16(2) and block2(2) [The non religious] [about 275 people in both clusters]")
