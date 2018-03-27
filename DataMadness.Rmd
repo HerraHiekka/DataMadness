@@ -82,7 +82,15 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 #Mclust(MMdata_merged[x])
 #})
 
-# fullCluster <- Mclust(MMdata.imputed[unlist(blocks)])
+fullCluster <- Mclust(MMdata.imputed[unlist(blocks)])
+
+MMdata_merged[unlist(blocks)] %>%
+  mutate(classification=fullCluster$classification) %>%
+  melt(id=c("classification"))  %>%
+  group_by(classification,variable,value) %>%
+  count() %>%
+  group_by(classification,variable) %>%
+  summarise(variance=var(rep(value,n)))
 
 # Printing all summaires for all clusters
 #lapply(mclusters, summary, parameters=TRUE)
