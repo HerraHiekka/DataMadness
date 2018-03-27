@@ -26,6 +26,7 @@ library( mice )
 library( reshape2 )
 library(grDevices)
 library( gridExtra )
+library( doBy )
 ```
 
 ## Introduction
@@ -77,9 +78,11 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 
 # This block is commented out, because it should not be run as one. Commands are heavy and produce a lot of output. Choose which plots and cluster you want to examine before running commands.
 
-mclusters <- lapply(blocks, function (x) {
-Mclust(MMdata_merged[x])
-})
+#mclusters <- lapply(blocks, function (x) {
+#Mclust(MMdata_merged[x])
+#})
+
+# fullCluster <- Mclust(MMdata.imputed[unlist(blocks)])
 
 # Printing all summaires for all clusters
 #lapply(mclusters, summary, parameters=TRUE)
@@ -216,11 +219,19 @@ diff2d3pt <- function( xl, xm, xr, h ) (xl - 2*xm + xr) / h^2
 ```{r clustering_transformed_sizes}
 transformClusterSize <- 5
 MMdata.blockt.clustered <- data.frame( cbind( MMdata.blockt
-                                              , MMdata.blockt.kclusters[[ transformClusterSize - 1 ]]$cluster ) )
+                                              , factor( MMdata.blockt.kclusters[[ transformClusterSize - 1 ]]$cluster ) ) )
 colnames( MMdata.blockt.clustered ) <- c( paste0( "block", 1:length( blocks ) ), "cluster" )
-ggplot( data.frame( count( MMdata.blockt.clustered$cluster ) )
-        , aes( x=x, y=freq ) ) + geom_col() +
-  xlab( "cluster" ) + ylab( "size" ) + ggtitle( "cluster sizes" )
+
+
+count( MMdata.blockt.clustered, cluster )
+# use this if NOT knitting
+MMdata.blockt.clustered.counts <- data.frame( count( MMdata.blockt.clustered$cluster ) )
+# use this if knitting
+MMdata.blockt.clustered.counts <- data.frame( count( MMdata.blockt.clustered, cluster ) )
+
+#ggplot( MMdata.blockt.clustered.counts
+#        , aes( x=x, y=freq ) ) + geom_col() +
+#  xlab( "cluster" ) + ylab( "size" ) + ggtitle( "cluster sizes" )
 ```
 
 
@@ -326,6 +337,9 @@ Cluster 5
 
 ```{r clustering_transformed_personal}
 # means of personal variables
+MMdata.merged.clustered <- cbind( MMdata_merged, MMdata.blockt.clustered$cluster )
+colnames( MMdata.merged.clustered ) <- c( colnames( MMdata_merged) , "cluster" )
+
 # MMdata.merged.clustered %>% group_by( cluster ) %>% summarise_at( vars( ppeduc, ppage, ppgender, ppethm, ppincimp, ppnet ), funs( mean( ., na.rm=TRUE)))
 
 MMdata.merged.clustered$ppgender <- factor( MMdata.merged.clustered$ppgender
@@ -348,7 +362,7 @@ MMdata.merged.clustered$pphouse <- factor( MMdata.merged.clustered$pphouse
 pvars.plots <- lapply( c( "ppagect4", "ppeducat", "ppgender", "ppethm", "ppnet", "ppmarit", "pphouse" )
                        , function( v ) ggplot( data=MMdata.merged.clustered
                                                , aes_string( x="cluster", fill=v ) ) +
-                         geom_bar( ) )
+                         geom_bar( position="fill" ) )
 
 #for( plot in pvars.plots ) plot
 grid.arrange( grobs=pvars.plots[ 1:4 ] )
