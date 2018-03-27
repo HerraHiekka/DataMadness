@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
   knitr::opts_chunk$set(
   fig.path = "images/"
 )
@@ -222,10 +222,8 @@ MMdata.blockt.clustered <- data.frame( cbind( MMdata.blockt
                                               , factor( MMdata.blockt.kclusters[[ transformClusterSize - 1 ]]$cluster ) ) )
 colnames( MMdata.blockt.clustered ) <- c( paste0( "block", 1:length( blocks ) ), "cluster" )
 
-
-count( MMdata.blockt.clustered, cluster )
 # use this if NOT knitting
-MMdata.blockt.clustered.counts <- data.frame( count( MMdata.blockt.clustered$cluster ) )
+# MMdata.blockt.clustered.counts <- data.frame( count( MMdata.blockt.clustered$cluster ) )
 # use this if knitting
 MMdata.blockt.clustered.counts <- data.frame( count( MMdata.blockt.clustered, cluster ) )
 
@@ -264,14 +262,18 @@ ggplot( MMdata.blockt.clustered.means
 
 big differences
 Block 2: Identity measures - clusters 2,5 (less important) vs. 1,3 (very important)
-weighted highly: job, political party, favorite sports team
+
+highly weighted: job, political party, favorite sports team
 
 Block 4: Moral relativism - cluster 2 (relative) vs 5 (disagreeing)
+
 higly weighted: What is right and wrong is up to each person to decide
 
 Block 9: Sacredness of moral principles - cluster 1 (less) vs 2,3,5 (more)
+
 higly weighted: Sign a piece of paper that says “I hereby sell my soul, after my death, to whoever has
 this piece of paper” (SIGNIFICANT)
+
 low weighted: Attend a performance art piece in which all participants (including you) have to act
 like animals for 30 minutes, including crawling around naked and urinating on stage
 
@@ -313,26 +315,39 @@ t.test( MMdata.blockt.clustered$block4[ is.element( MMdata.blockt.clustered$clus
 ```
 
 Cluster 1
+
 - find many things (country, religion etc) relevant to their identity
+
 - do not hold moral values high/more pragmatic
+
 - give the least in the dictator game
 
 Cluster 2
+
 - find less things relevant to their identity
+
 - moral relativists
+
 - do think of their moral values sacred/would take a lot of money
+
 - second to last in dictator game
 
 Cluster 3
+
 - average, really everywhere
 
 Cluster 4 
+
 - irrelevant, too small, collects refused answers
 
 Cluster 5
+
 - find less things relevant to their identity
+
 - oppose moral relativism
+
 - do hold their morals dear
+
 - give the most in the dictator game (exactly average)
 
 ```{r clustering_transformed_personal}
