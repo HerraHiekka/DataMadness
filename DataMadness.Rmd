@@ -82,6 +82,8 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 #Mclust(MMdata_merged[x])
 #})
 
+# fullCluster <- Mclust(MMdata.imputed[unlist(blocks)])
+
 # Printing all summaires for all clusters
 #lapply(mclusters, summary, parameters=TRUE)
 
