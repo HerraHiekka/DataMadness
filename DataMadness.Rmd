@@ -180,9 +180,32 @@ ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
         , aes( x=name, y=value, color=sig ) ) + 
   geom_col() + 
   facet_wrap( ~L1, ncol=4, scales="free" ) +
-  theme( axis.text.x=element_text( angle=45, hjust=1 ))
+  theme( axis.text.x=element_text( angle=45, hjust=1 ) )
 ```
 
+
+```{r transforming_blocks}
+# just do matrix multiply: original dims x reduced dims
+# do some padding
+blockTransform <- matrix( data=0, nrow=length( unlist( blocks ) ), ncol=length( blocks ) )
+for( ib in 1:length( blocks ) )
+{
+  off <- if( ib > 1 ) sum( sapply( blocks, length )[ 1:(ib - 1) ] ) else 0
+  blockTransform[ (off + 1):(off + length( blocks[[ ib ]] ) ), ib ] <- blocks.weights.norm[[ ib ]]
+  print( (off + 1):(off + length( blocks[[ ib ]] ) ) )
+  print( blocks.weights.norm[[ ib ]] )
+  print( "" )
+}
+
+as.matrix( MMdata_merged[] , unlist( blocks ) ] ) %*% blockTransform
+
+lapply( blocks, function( vs ) blocks.weights.norm.df[ blocks.weights.norm.df$name == vs, ] )
+
+MMdata_merged[ 1, vs ] * 
+
+blocks.weights.norm.df[ blocks.weights.norm.df$name == blocks[[1]], ]
+
+```
 
 ```{r kmodes_methods}
 # Define methods for the clusters

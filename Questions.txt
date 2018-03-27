@@ -11,3 +11,8 @@ low
 L16     Obedience must be instilled in children.
 DPES9   I feel strong positive emotion when I do something well.
 MFSS12  Attend a performance art piece in which all participants (including you) have to act like animals for 30 minutes, including crawling around naked and urinating on stage
+
+
+RFQ - religous
+MFSS - everyday morality - correlated with RFQ
+MR2,3 - moral relativism, morals given by god
