@@ -1,6 +1,8 @@
 \documentclass{article}
 
 \usepackage{hyperref}
+\usepackage{fullpage}
+\usepackage[inline]{enumitem}
 
 \title{Data Madness - Measuring morality}
 \date{\today}
@@ -12,11 +14,55 @@
 \maketitle
 
 \section{Introduction}
-For this assignment, we 
-
-\begin{
+We worked on the dataset \href{http://kenan.ethics.duke.edu/attitudes/resources/measuring-morality/}{Measuring morality}, concerned with assessing the character of moral beliefs in individual in the United States.
+We will answer the following questions:
+\begin{enumerate}
+\item \label{qs:aggregation} Can we find ways to interpret the answers of each block as one value? 
+\item \label{qs:blockCluster} Can we identify distinct clusters within different blocks of questions? 
+\item \label{qs:blockCorrelations} Based on these values and/or clusters, are there clear correlations between interpretable blocks? 
+\item \label{qs:types} Are there interpretable types of individuals? 
+\item \label{qs:personal} Can we link the clusters to personal metrics? 
+\end{enumerate}
 
 \section{Methods}
+
+
+\paragraph{}
+We employed principal component analysis to obtain a linear combination proportionfor each block, weighting the influence of each question within.
+These weights were obtained from the sum of loadings per variable weighted by the variance explained by each principal component.
+We transformed the original data into a matrix only containing one value for each block and used k-means on it.
+
+\section{Results}
+
+\begin{enumerate}
+  \item \href{qs:aggregation} Yes we can! We used PCA to obtain weights.
+
+  \item \href{qs:blockCluster} Yes we can! We performed EM-clustering and k-modes clustering on a per block basis and obtained the cetroids of each cluster. We then related the results with the questions presented in the questionnaire.
+
+  \item \href{qs:blockCorrelations} Sometimes. Our results show that the correlations between variables are not particularly strong. However we could find correlations between individual clusters for specific blocks. Additionally, there was often overlap between the clusters and only few variables clearly separated a cluster from the others.
+
+  \item \href{qs:types} Based on the per-block basis clustering we could find pairs of clusters correlated over multiple blocks. This established a link between blocks of questions for a specific cluster, such as:
+    \begin{enumerate*}
+      \item a group of individuals never taking a side
+      \item a group of individuals with high answers to integrity and ethical values questions
+    \end{enumerate*} \\
+
+    Furthermore, we could find four clusters on the transformed data with k-means, namely:
+    \begin{enumerate*}
+    \item Materialistic pragmatists
+    \item Individualists
+    \item Average people
+    \item Saints
+    \end{enumerate*}
+
+  \item \href{qs:personal} Corresponding to the previous 4 types:
+    \begin{enumerate*}
+    \item rather young, educated, male, not married
+    \item more ethnically diverse, less tertiary educated, fewer living in detached houses
+    \item average, everywhere
+    \item most likely to be married and to live in a detached house, predominantly women
+    \end{enumerate*}
+\end{enumerate}
 
 
 \end{document}

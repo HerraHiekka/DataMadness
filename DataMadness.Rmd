@@ -40,7 +40,9 @@ The questions we would like to adress are as follows:
 
 3. Based on these values and/or clusters, are there clear correlations between interpretable blocks?
 
-4. Can we link the clusters to personal metrics?
+4. Are there interpretable types of individuals?
+
+5. Can we link the clusters to personal metrics?
 
 ```{r data_import}
 load("./measuringMoralityDuke/MMdata_merged.rdata")
@@ -131,7 +133,7 @@ MMdata.cluster.variances.counts$classification <- as.factor(MMdata.cluster.varia
 ggplot(MMdata.cluster.variances.counts, aes(x=classification, y=n,fill=classification)) + 
   geom_col() +
   ylab( "sums of Var per cluster") +
-  ggitle( "variances per cluster" )
+  ggtitle( "variances per cluster" )
 
 # Printing all summaires for all clusters
 #lapply(mclusters, summary, parameters=TRUE)
@@ -654,15 +656,15 @@ Based on the per-block basis clustering we could find pairs of clusters correlat
 
 Given our clustering on the entire dataset we could find 4 types
 
-1. Materialistic pragmatists
+- Materialistic pragmatists
 
-2. Individualists
+- Individualists
 
-3. Average people
+- Average people
 
-4. Saints
+- Saints
 
-4. Can we link the clusters to personal metrics?
+- Can we link the clusters to personal metrics?
 
 Yes, we can! Corresponding to the previous 4 types
 
