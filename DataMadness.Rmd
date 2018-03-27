@@ -188,24 +188,24 @@ ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
 ```{r kmodes_methods}
 # Define methods for the clusters
 
-get_tot_diffs <- function(x) {
+get_tot_diffs <- function(x, max_size=15) {
   # Get the maximum difference for 15 different cluster sizes (from 2 to 16)
-  kmode_res <- lapply(1:15, function(i){kmodes(x, i+1)})
+  kmode_res <- lapply(1:max_size, function(i){kmodes(x, i+1)})
   diffs <- lapply(kmode_res, function(y){sum(y$withindiff)})
   return(unlist(diffs))
 }
 
-test_kmodes_runs <- function(x, tests=5) {
+test_kmodes_runs <- function(x, tests=5, max_size=15) {
   # Runs the get_max_diffs function different times to average out the random initial seed of kmodes
-  all_tests <- lapply(1:tests, function(y) {get_tot_diffs(x)})
+  all_tests <- lapply(1:tests, function(y) {get_tot_diffs(x, max_size)})
   
   # Returns dataframe with runs as rows and cluster number as columns (V[number of clusters - 1])
   return(as.data.frame(do.call(rbind, all_tests)))
 }
 
-avg_diffs_for_block <- function(x, tests = 20) {
+avg_diffs_for_block <- function(x, tests = 20, max_size=15) {
   # Averages the cluster scores given by the previous method
-  run_for_block <- test_kmodes_runs(x, tests = tests)
+  run_for_block <- test_kmodes_runs(x, tests = tests, max_size = max_size)
   print('Finished testing for one block')
   return(sapply(names(run_for_block), function(y) {mean(run_for_block[,y])}))
 }
@@ -216,7 +216,7 @@ multi.dim.idx <- c(1:14,16)
 multi.dim.blocks <- blocks[multi.dim.idx]
 ```
 
-```{r kmodes_on_blocks, eval=FALSE}
+```{r kmodes_on_blocks, eval=FALSE, echo=FALSE}
 # WARNING: VERY LONG COMPUTATION! NOT WORTH RUNNING
 # The results are in the object n_clust (2 blocks below)
 # Actual computation of average intr-cluster difference for different k with kmodes 
@@ -226,18 +226,16 @@ for (i in 1:length(multi.dim.blocks)){
   
   all_avgs[[i]] <- avg_diffs_for_block(MMdata_merged[,multi.dim.blocks[[i]]], tests = 8)
 }
-
-
 ```
 
-```{r print_kmodes, eval=FALSE}
+```{r print_kmodes, eval=FALSE, echo=FALSE}
 for (i in c(1:11,13,14,16)){
   print(paste0(c('Block ', i), collapse=''))
   plot(all_avgs[[i]])
 }
 ```
 
-```{r}
+```{r create_clusters}
 # For block 2, 13 and 16 no proper value
 # Same order as multi dim blocks
 n_clust <- c(6, 4, 5, 6, 5, 6, 7, 7, 6, 6, 7, 8, 5, 8, 9)
@@ -245,14 +243,22 @@ clust_obj <- vector('list', length(n_clust))
 
 # Get the cluster objects for each block
 for (i in 1:length(multi.dim.blocks)){
-  clust_obj[[i]] <- kmodes(MMdata_merged[,multi.dim.blocks[[i]]], n_clust[i])
+  data <- MMdata_merged[,multi.dim.blocks[[i]]]
+  clust_obj[[i]] <- kmodes(data, distinct(data[1:n_clust[i],]))
 }
+all_var_kmodes_6 <- kmodes(MMdata_merged[, unlist(blocks)], distinct(MMdata_merged[1:6,unlist(blocks)]))
+all_var_kmodes_9 <- kmodes(MMdata_merged[, unlist(blocks)], distinct(MMdata_merged[1:9,unlist(blocks)]))
+all_var_kmodes_11 <- kmodes(MMdata_merged[, unlist(blocks)], distinct(MMdata_merged[1:11,unlist(blocks)]))
 
 clust_df <- data.frame(block1=clust_obj[[1]]$cluster)
 for (i in 2:length(multi.dim.blocks)){
   clust_df <- cbind(clust_df, clust_obj[[i]]$cluster)
 }
 colnames(clust_df) <- paste0('block',multi.dim.idx)
+
+clust_df$all.blocks.6 <- all_var_kmodes_6$cluster
+clust_df$all.blocks.9 <- all_var_kmodes_9$cluster
+clust_df$all.blocks.11 <- all_var_kmodes_11$cluster
 ```
 
 ```{r, clust_transition_function}
@@ -274,7 +280,7 @@ create.intersect.df <- function(x_name,y_name,data,norm_first=TRUE, return_mat=F
     mat.res <- t(apply(mat.res, 1, function(x) x/sum(x)))
   }
     
-  p <- ggplot(melt(mat.res), aes(x=Var1, y=Var2, fill=value)) + geom_tile()# + labs(fill='Intersecting', x=paste0(c('from', x_name), collapse = ' '), y=paste0(c('to', y_name), collapse = ' ')) + ggtitle(paste0(c('Transitions from', x_name, 'to', y_name), collapse = ' ')) + geom_text(aes(label=round(value, 3)))
+  p <- ggplot(melt(mat.res), aes(x=Var1, y=Var2, fill=value)) + geom_tile() + labs(fill='Intersecting', x=paste0(c('from', x_name), collapse = ' '), y=paste0(c('to', y_name), collapse = ' ')) + ggtitle(paste0(c('Transitions from', x_name, 'to', y_name), collapse = ' ')) + geom_text(aes(label=round(value, 3)))
   
   if (return_mat)
     return(mat.res)
@@ -284,30 +290,91 @@ create.intersect.df <- function(x_name,y_name,data,norm_first=TRUE, return_mat=F
 ```
 
 ```{r transition_graph_list}
-block.names <- c("block1", "block2", "block3", "block4", "block5", "block6", "block7", "block8", "block9", "block10", "block11", "block12", "block13", "block14", "block16")
+block.names <- c("block1", "block2", "block3", "block4", "block5", "block6", "block7", "block8", "block9", "block10", "block11", "block12", "block13", "block14", "block16", 'all.blocks.6', 'all.blocks.9', 'all.blocks.11')
 
 # The list with all transition graphs
-graph_list <- vector('list', length(block.names)^2)
+graph_list <- vector('list', length(block.names)^2 - length(block.names))
+mat_list <- vector('list', length(block.names)^2 - length(block.names))
 
 count <- 1
 for (i in 1:length(block.names)){
   for (j in 1:length(block.names)){
     name_1 <- block.names[i]
     name_2 <- block.names[j]
-    
-    graph_list[[count]] <- create.intersect.df(name_1, name_2, clust_df)
-    count <- count + 1
+    # Don't get useless identity graphs
+    if (name_1 != name_2) {
+      graph_list[[count]] <- create.intersect.df(name_1, name_2, clust_df)
+      mat_list[[count]] <- create.intersect.df(name_1, name_2, clust_df, norm_first = FALSE, return_mat = TRUE)
+      count <- count + 1
+    }
   }
 }
 
 ```
 
 ```{r}
-# Sounds good, doesn't work [Try it out, it takes 20 second max]
-# multiplot(plotlist = graph_list, layout = matrix(1:225, nrow = 15, ncol = 15))
+plot.clust.distr <- function(clust_name){
+  vars <- c('ppagect4', 'ppeducat', 'ppgender', 'ppethm')
+  
+  agecat <- c('18-29', '30-44', '45-59', '60+')
+  educat <- c('<HS', 'HS', 'Cg', 'Bsc')
+  gencat <- c('M', 'F')
+  ethcat <- c('White', 'Black', 'Other', '2 or more', 'Hispanic')
+  
+  categories <- list(agecat, educat, gencat, ethcat)
+  
+  comparison_df <- clust_df
+  
+  for (i in 1:length(vars)){
+    var <- vars[i]
+    comparison_df[[var]] <- categories[[i]][MMdata_merged[, var]]
+  }
+  
+  return(multiplot(plotlist=lapply(vars, function(var) ggplot(data=comparison_df, aes_string(x=clust_name, fill=var)) + geom_bar(position='fill')), cols = 2))
+}
 ```
 
-```{r all_var_kmodes}
-all_var_clust_4 <- kmodes(MMdata_merged[], 4)
+
+```{r between_clust_analisys}
+# Interesting transition from block6(2) to block13(3), from block16(2) [The 'hippies' (all 7 in block6)]
+p_1 <- create.intersect.df('block6', 'block13', clust_df, norm_first = FALSE)
+p_2 <- create.intersect.df('block13', 'block16', clust_df, norm_first = FALSE)
+p_3 <- create.intersect.df('block6', 'block16', clust_df, norm_first = FALSE)
+multiplot(p_1, p_2, p_3, cols = 2)
+
+# Plotting only block 6 info [check cluster 2]
+plot.clust.distr('block6')
+
+# Interesting transition from block5(5) to block4(5), block12(5) to block4(5), block10(5) to block4(5) [Still undecided]
+g_1 <- create.intersect.df('block5', 'block4', clust_df, norm_first = FALSE)
+g_2 <- create.intersect.df('block12', 'block4', clust_df, norm_first = FALSE)
+g_3 <- create.intersect.df('block10', 'block4', clust_df, norm_first = FALSE)
+multiplot(g_1, g_2, g_3, cols = 2)
+
+# Plotting only block 5 info [check cluster 5]
+plot.clust.distr('block5')
+
+# Interesting transition between block4(1), block12(1) [The 'Believe in Jesus but don't like the word religious'] [about 180 people in both cluster]
+create.intersect.df('block4', 'block12', clust_df, norm_first = FALSE)
+
+# Plotting only block 4 info [check cluster 1]
+plot.clust.distr('block4')
+
+# Interesting transition from block16(2) and block2(2) [The non religious] [about 275 people in both clusters]
+create.intersect.df('block16', 'block2', clust_df, norm_first = FALSE)
+
+# Plotting only block 16 info [check cluster 2]
+plot.clust.distr('block16')
+
+# Interesting transition between block16(3) and block12(1) [High integrity and moral values (christians)] [about 270 people]
+create.intersect.df('block16', 'block12', clust_df, norm_first = FALSE)
+
+# Plotting only block 12 info [check cluster 6]
+plot.clust.distr('block12')
+
+# Clusters in all.blocks.6 => {6: [Non religious], 4: [Hippies/High integrity and moral], 1: [Always undecided], }
+plot.clust.distr('all.blocks.6')
+# Sounds good, doesn't work [Try it out, it takes 20 second max]
+# multiplot(plotlist = graph_list, layout = matrix(1:225, nrow = 15, ncol = 15))
 ```
 
