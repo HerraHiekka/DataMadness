@@ -86,14 +86,13 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 
 # EM clustering
 
-```{r clustering, warning=FALSE}
-# Suppressing warnings because Loess causes problems with spms
+The first approach for finding common groups is to cluster the dataset as whole. Here we decided on using EM clustering because of an existing R package. Even though EM is not specifically tailored for catecorigal data, which especially the refusal to answer is, we deemed it suitable. We could also contrast this with kmodes later during the analysis.
+A problem with this approach is how to deal with missing values and the mentioned refusals to answer a question. We decided to deal with this by imputing from a column-wise empirical distribution. This way the data set won't enforce existing relations, like imputation by bayesian inference would, and the distribution is maintained, so the mean and variance won't change.
 
-# This block is commented out, because it should not be run as one. Commands are heavy and produce a lot of output. Choose which plots and cluster you want to examine before running commands.
+```{r em_clustering}
 
-#mclusters <- lapply(blocks, function (x) {
-#Mclust(MMdata_merged[x])
-#})
+# Some sections are commented out in this block, as they take a long time to run.
+
 
 # Imputation with empirical distribution
 MMdata.imputed <- MMdata_merged
@@ -105,14 +104,6 @@ MMdata.imputed[unlist(blocks)] <- apply(MMdata.imputed[unlist(blocks)], 2, funct
 })
 
 fullCluster <- Mclust(MMdata.imputed[unlist(blocks)])
-
-# MMdata_merged[unlist(blocks)] %>%
-#  mutate(classification=fullCluster$classification) %>%
-#  melt(id=c("classification"))  %>%
-#  group_by(classification,variable,value) %>%
-#  count() %>%
-#  group_by(classification,variable) %>%
-#  summarise(variance=var(rep(value,n)))
 
 MMdata.cluster.variances <- MMdata_merged[unlist(blocks)] %>%
   mutate(classification=fullCluster$classification) %>%
@@ -135,17 +126,19 @@ ggplot(MMdata.cluster.variances.counts, aes(x=classification, y=n,fill=classific
   ylab( "sums of Var per cluster") +
   ggtitle( "variances per cluster" )
 
-# Printing all summaires for all clusters
-#lapply(mclusters, summary, parameters=TRUE)
-
-# Ignoring 15 and 17, since there's only one question
-#clusterBlocks <- blocks[-c(15,17)]
-# spm generation for inside the blocks
-#lapply(clusterBlocks, function(x){
-#  columns <- paste0("~", paste(x, collapse = "+"))
-#  spm(as.formula(columns), MMdata_merged)
-#})
 ```
+
+After clustering, we observed 8 distinct groups. 4 of these consisted of 4 or fewer individuals, so we decided to focus on the 4 other major clusters. We then plotted the answer frequencies by cluster and question to observe distinctive features from each cluster. Major opinion divider here was religious identity. Observations for the 4 clusters are as follows:
+
+1. Strongly non- or anti-religious. This was visible in all religious questions throughout the questionnaire. Interestingly, when compared to other clusters, this group showed a nearly equal compassion and adherence to ethics (when asked questions about things such as insurance fraud or cheating in an exam) as groups 2 and 3. This group showed some degree of preference towards moral relativism than other groups.
+
+2. Strongly religious group. Similar to group 3, this group considers religion very important. To contrast, they are more relativistic about morals than group 3 and they tended to answer slightly weaker agreement within questions about sacredness of moral values.
+
+3. Strongly religious group. As hilighted by cluster 2, this group appeared to be a more strict group of religious individuals than group 2.
+
+4. Normal group. This group tended to answer neither agree or disagree for most of the questions, especially the ones about identity. They aren't characterized by any specific question in the entire questionnaire and won't stand out compared to the other 3 groups. However, the interesting observation was that this group considers moral questions, such as the ones in every day moralism section, more loosely than other groups. Their answers didn't show as uniform agreement about immoralities of things like lying or fraud as other groups did.
+
+Finally, we were interested if some of the groups are more uniform in their values than other groups. We summed up variances from each question, producing the plot dispalyed after em_clustering block. The differences in variances are very small and practically insignificant. This is quite surprising as it could be epected that religious groups in USA, being mainly christian, would have a more uniform set of moral principles.
 
 # PCA weighting + kmeans
 
