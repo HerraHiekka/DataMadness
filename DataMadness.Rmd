@@ -187,19 +187,49 @@ ggplot( blocks.weights.norm.df[ blocks.weights.norm.df$L1 != c(15, 17), ]
 
 ```{r transforming_blocks}
 # just do matrix multiply: original dims x reduced dims
-# do some padding
 blockTransform <- matrix( data=0, nrow=length( unlist( blocks ) ), ncol=length( blocks ) )
 for( ib in 1:length( blocks ) )
 {
   off <- if( ib > 1 ) sum( sapply( blocks, length )[ 1:(ib - 1) ] ) else 0
   blockTransform[ (off + 1):(off + length( blocks[[ ib ]] ) ), ib ] <- blocks.weights.norm[[ ib ]]
-  print( (off + 1):(off + length( blocks[[ ib ]] ) ) )
-  print( blocks.weights.norm[[ ib ]] )
-  print( "" )
 }
-
 MMdata.blockt <- as.matrix( MMdata_merged[ ,unlist( blocks ) ] ) %*% blockTransform
+MMdata.blockt.kclusters <- lapply( 1:20, function( k ) kmeans( MMdata.blockt, k, iter.max=100 )  )
 
+ggplot( data.frame( count( MMdata.blockt.clustered$cluster ) )
+        , aes( x=x, y=freq ) ) + geom_col() +
+  xlab( "cluster" ) + ylab( "size" ) + ggtitle( "cluster sizes" )
+```
+
+
+```{r clustering_transformed_blocks}
+weightedIntradiff <- function( k ) sum( k$withinss * k$size )
+
+diff1d2pt <- function( xl, xm, h ) (xl - xm) / h
+diff2d3pt <- function( xl, xm, xr, h ) (xl - 2*xm + xr) / h^2
+
+MMdata.blockt.clustered <- data.frame( cbind( MMdata.blockt, MMdata.blockt.kclusters[[5]]$cluster ) )
+colnames( MMdata.blockt.clustered ) <- c( paste0( "block", 1:17 ), "cluster" )
+
+ggplot( melt( MMdata.blockt.clustered, id.vars="cluster")
+        , aes( group=cluster, x=cluster, y=value ) ) + 
+  geom_boxplot() + 
+  facet_wrap( ~variable, scales="free_y" ) +
+  ggtitle( "distribution of responses" )
+```
+
+```{r transformed_cluster_lines}
+MMdata.blockt.clustered.means <- melt( matrix( unlist( lapplyBy( ~cluster
+                                                                 , data=MMdata.blockt.clustered
+                                                                 , FUN=colMeans ) )
+                                               , ncol=5 ) )
+colnames( MMdata.blockt.clustered.means ) <- c( "block", "cluster", "mean" )
+MMdata.blockt.clustered.means$cluster <- factor( MMdata.blockt.clustered.means$cluster )
+ggplot( MMdata.blockt.clustered.means
+        , aes( x=block, y=mean, color=cluster ) ) +
+  geom_line() +
+  xlab( "question block" ) + ylab( "mean response" ) +
+  ggtitle( "Overview of mean responses" )
 ```
 
 ```{r kmodes_methods}
