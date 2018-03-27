@@ -25,6 +25,7 @@ library(cluster)
 library( mice )
 library( reshape2 )
 library(grDevices)
+library( gridExtra )
 ```
 
 ## Introduction
@@ -323,10 +324,36 @@ Cluster 5
 - do hold their morals dear
 - give the most in the dictator game (exactly average)
 
-```{r clustering_transformed_sized_rep}
-ggplot( data.frame( count( MMdata.blockt.clustered$cluster ) )
-        , aes( x=x, y=freq ) ) + geom_col() +
-  xlab( "cluster" ) + ylab( "size" ) + ggtitle( "cluster sizes" )
+```{r clustering_transformed_personal}
+# means of personal variables
+# MMdata.merged.clustered %>% group_by( cluster ) %>% summarise_at( vars( ppeduc, ppage, ppgender, ppethm, ppincimp, ppnet ), funs( mean( ., na.rm=TRUE)))
+
+MMdata.merged.clustered$ppgender <- factor( MMdata.merged.clustered$ppgender
+                                            , labels=c("male", "female" ) )
+MMdata.merged.clustered$ppeducat <- factor( MMdata.merged.clustered$ppeducat
+                                            , labels=c( "none", "high school", "college", "Bachelors+") )
+MMdata.merged.clustered$ppethm <- factor( MMdata.merged.clustered$ppethm
+                                          , labels=c( "white", "black", "other", "hispanic", "2+" ) )
+#MMdata.merged.clustered$ppincimp <- factor( MMdata.merged.clustered$ppincimp
+#                                            , labels=c("< 10k", "10-25k", "25-50k", "50-75k", "75k+" ) )
+MMdata.merged.clustered$ppnet <- factor( MMdata.merged.clustered$ppnet
+                                         , labels=c( "yes", "no" ) )
+MMdata.merged.clustered$ppagect4 <- factor( MMdata.merged.clustered$ppagect4
+                                            , labels=c( "18 - 29", "30 - 44", "45 - 59", "60+") )
+MMdata.merged.clustered$ppmarit <- factor( MMdata.merged.clustered$ppmarit
+                                           , labels=c( "married", "widowed", "divorced", "separated", "never married", "with partner" ) )
+MMdata.merged.clustered$pphouse <- factor( MMdata.merged.clustered$pphouse
+                                           , labels=c( "house det", "house att", "appartment", "mob home", "other" ) )
+
+pvars.plots <- lapply( c( "ppagect4", "ppeducat", "ppgender", "ppethm", "ppnet", "ppmarit", "pphouse" )
+                       , function( v ) ggplot( data=MMdata.merged.clustered
+                                               , aes_string( x="cluster", fill=v ) ) +
+                         geom_bar( ) )
+
+#for( plot in pvars.plots ) plot
+grid.arrange( grobs=pvars.plots[ 1:4 ] )
+grid.arrange( grobs=pvars.plots[ 5:7 ], ncol=2 ) 
+
 ```
 
 
