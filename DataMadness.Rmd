@@ -198,13 +198,7 @@ for( ib in 1:length( blocks ) )
   print( "" )
 }
 
-as.matrix( MMdata_merged[] , unlist( blocks ) ] ) %*% blockTransform
-
-lapply( blocks, function( vs ) blocks.weights.norm.df[ blocks.weights.norm.df$name == vs, ] )
-
-MMdata_merged[ 1, vs ] * 
-
-blocks.weights.norm.df[ blocks.weights.norm.df$name == blocks[[1]], ]
+MMdata.blockt <- as.matrix( MMdata_merged[ ,unlist( blocks ) ] ) %*% blockTransform
 
 ```
 
