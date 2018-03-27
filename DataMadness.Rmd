@@ -82,6 +82,15 @@ blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,bl
 #Mclust(MMdata_merged[x])
 #})
 
+# Imputation with empirical distribution
+MMdata.imputed <- MMdata_merged
+MMdata.imputed[MMdata.imputed == -1] <- NA
+MMdata.imputed[unlist(blocks)] <- apply(MMdata.imputed[unlist(blocks)], 2, function(x){
+  na.indecies <- which(is.na(x))
+  x[na.indecies] <- mice.impute.sample(x, !is.na(x))
+  return(t(x))
+})
+
 fullCluster <- Mclust(MMdata.imputed[unlist(blocks)])
 
 MMdata_merged[unlist(blocks)] %>%
