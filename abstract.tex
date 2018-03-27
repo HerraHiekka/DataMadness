@@ -20,6 +20,6 @@ For this assignment, we
 \paragraph{}
 We also applied Kmeans algorithm on a per block basis. For each block of multiple questions, we extracted the answer vector of each participant, and then we performed clustering on these vectors. In order to choose an appropriate number of clusters, for each value from 2 to 20 we performed 15 tests. Then, for each k we averaged the maximum total intra-cluster difference, and we applied the elbow method to choose the appropriate value.
 
-
+After performing the clustering, we performed some experiments and discovered that some of the clusters found for one block had an almost complete correspondence with another cluster found on another block of questions. Using this information together with the clusters made on the entire set of blocks, we could identify some distinct group of people with very similar opinions.
 
 \end{document}
