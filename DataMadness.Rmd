@@ -181,12 +181,15 @@ avg_diffs_for_block <- function(x, tests = 20) {
 ```
 
 ```{r kmodes_on_blocks_init}
-multi.dim.blocks <- blocks[c(1:11,13,14,16)]
-all_avgs <- vector('list', length(multi.dim.blocks))
+multi.dim.idx <- c(1:14,16)
+multi.dim.blocks <- blocks[multi.dim.idx]
 ```
 
 ```{r kmodes_on_blocks, eval=FALSE}
+# WARNING: VERY LONG COMPUTATION! NOT WORTH RUNNING
+# The results are in the object n_clust (2 blocks below)
 # Actual computation of average intr-cluster difference for different k with kmodes 
+all_avgs <- vector('list', length(multi.dim.blocks))
 for (i in 1:length(multi.dim.blocks)){
   print(paste0(c('Iteration ', i), collapse = ''))
   
@@ -195,7 +198,6 @@ for (i in 1:length(multi.dim.blocks)){
 
 
 ```
-
 
 ```{r print_kmodes, eval=FALSE}
 for (i in c(1:11,13,14,16)){
@@ -207,24 +209,74 @@ for (i in c(1:11,13,14,16)){
 ```{r}
 # For block 2, 13 and 16 no proper value
 # Same order as multi dim blocks
-n_clust <- c(6, 4, 5, 6, 5, 6, 7, 7, 6, 6, 7, 5, 8, 9)
+n_clust <- c(6, 4, 5, 6, 5, 6, 7, 7, 6, 6, 7, 8, 5, 8, 9)
 clust_obj <- vector('list', length(n_clust))
 
+# Get the cluster objects for each block
 for (i in 1:length(multi.dim.blocks)){
   clust_obj[[i]] <- kmodes(MMdata_merged[,multi.dim.blocks[[i]]], n_clust[i])
 }
+
+clust_df <- data.frame(block1=clust_obj[[1]]$cluster)
+for (i in 2:length(multi.dim.blocks)){
+  clust_df <- cbind(clust_df, clust_obj[[i]]$cluster)
+}
+colnames(clust_df) <- paste0('block',multi.dim.idx)
+```
+
+```{r, clust_transition_function}
+# E.g. create.intersect.df('block1', 'block12', clust_df)
+# Given names of 2 columns as string (e.g. block names), a dataframe with cluster values, create heatplot and return matrix
+create.intersect.df <- function(x_name,y_name,data,norm_first=TRUE, return_mat=FALSE){
+  idx <- data[,x_name]
+  idy <- data[,y_name]
+  
+  # Get the clusters
+  clust_x <- lapply(1:max(idx), function(i) which(idx == i))
+  clust_y <- lapply(1:max(idy), function(i) which(idy == i))
+  
+  # Create the matrix with transitions
+  mat.res <- lapply(clust_x, function(i) lapply(clust_y, function(j)length(intersect(i,j))))
+  mat.res <- t(matrix(unlist(mat.res), nrow = max(idy), ncol = max(idx)))
+  
+  if (norm_first==TRUE) {
+    mat.res <- t(apply(mat.res, 1, function(x) x/sum(x)))
+  }
+    
+  p <- ggplot(melt(mat.res), aes(x=Var1, y=Var2, fill=value)) + geom_tile()# + labs(fill='Intersecting', x=paste0(c('from', x_name), collapse = ' '), y=paste0(c('to', y_name), collapse = ' ')) + ggtitle(paste0(c('Transitions from', x_name, 'to', y_name), collapse = ' ')) + geom_text(aes(label=round(value, 3)))
+  
+  if (return_mat)
+    return(mat.res)
+  
+  return(p)
+}
+```
+
+```{r transition_graph_list}
+block.names <- c("block1", "block2", "block3", "block4", "block5", "block6", "block7", "block8", "block9", "block10", "block11", "block12", "block13", "block14", "block16")
+
+# The list with all transition graphs
+graph_list <- vector('list', length(block.names)^2)
+
+count <- 1
+for (i in 1:length(block.names)){
+  for (j in 1:length(block.names)){
+    name_1 <- block.names[i]
+    name_2 <- block.names[j]
+    
+    graph_list[[count]] <- create.intersect.df(name_1, name_2, clust_df)
+    count <- count + 1
+  }
+}
+
 ```
 
 ```{r}
-# Test on second
-index = 2
-clustered_instances <- lapply(1:n_clust[index], function(x) MMdata_merged[which(clust_obj[[index]]$cluster == x), multi.dim.blocks[[index]]])
-
-modes_2 <- clust_obj[[2]]$modes
-sizes_2 <- clust_obj[[2]]$size
+# Sounds good, doesn't work [Try it out, it takes 20 second max]
+# multiplot(plotlist = graph_list, layout = matrix(1:225, nrow = 15, ncol = 15))
 ```
 
-```{r}
-all_vars_all_avgs <- avg_diffs_for_block(MMdata_merged[,block12])
+```{r all_var_kmodes}
+all_var_clust_4 <- kmodes(MMdata_merged[], 4)
 ```
 
