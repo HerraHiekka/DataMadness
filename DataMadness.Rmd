@@ -537,45 +537,45 @@ plot.clust.distr <- function(clust_name){
 
 
 ```{r between_clust_analisys}
-# Interesting transition from block6(2) to block13(3), from block16(2) [The 'hippies' (all 7 in block6)]
+
+
+print("Interesting transition from block6(2) to block13(3), from block16(2) [The 'hippies' (all 7 in block6)]")
 p_1 <- create.intersect.df('block6', 'block13', clust_df, norm_first = FALSE)
 p_2 <- create.intersect.df('block13', 'block16', clust_df, norm_first = FALSE)
 p_3 <- create.intersect.df('block6', 'block16', clust_df, norm_first = FALSE)
 multiplot(p_1, p_2, p_3, cols = 2)
 
-# Plotting only block 6 info [check cluster 2]
+print("Plotting only block 6 info [check cluster 2]")
 plot.clust.distr('block6')
 
-# Interesting transition from block5(5) to block4(5), block12(5) to block4(5), block10(5) to block4(5) [Still undecided]
+print("Interesting transition from block5(5) to block4(5), block12(5) to block4(5), block10(5) to block4(5) [Still undecided]")
 g_1 <- create.intersect.df('block5', 'block4', clust_df, norm_first = FALSE)
 g_2 <- create.intersect.df('block12', 'block4', clust_df, norm_first = FALSE)
 g_3 <- create.intersect.df('block10', 'block4', clust_df, norm_first = FALSE)
 multiplot(g_1, g_2, g_3, cols = 2)
 
-# Plotting only block 5 info [check cluster 5]
+print("Plotting only block 5 info [check cluster 5]")
 plot.clust.distr('block5')
 
-# Interesting transition between block4(1), block12(1) [The 'Believe in Jesus but don't like the word religious'] [about 180 people in both cluster]
+print("Interesting transition between block4(1), block12(1) [The 'Believe in Jesus but don't like the word religious'] [about 180 people in both cluster]")
 create.intersect.df('block4', 'block12', clust_df, norm_first = FALSE)
 
-# Plotting only block 4 info [check cluster 1]
+print("Plotting only block 4 info [check cluster 1]")
 plot.clust.distr('block4')
 
-# Interesting transition from block16(2) and block2(2) [The non religious] [about 275 people in both clusters]
+print("Interesting transition from block16(2) and block2(2) [The non religious] [about 275 people in both clusters]")
 create.intersect.df('block16', 'block2', clust_df, norm_first = FALSE)
 
-# Plotting only block 16 info [check cluster 2]
+print("Plotting only block 16 info [check cluster 2]")
 plot.clust.distr('block16')
 
-# Interesting transition between block16(3) and block12(1) [High integrity and moral values (christians)] [about 270 people]
+print("Interesting transition between block16(3) and block12(1) [High integrity and moral values (christians)] [about 270 people]")
 create.intersect.df('block16', 'block12', clust_df, norm_first = FALSE)
 
-# Plotting only block 12 info [check cluster 6]
+print("Plotting only block 12 info [check cluster 6]")
 plot.clust.distr('block12')
 
-# Clusters in all.blocks.6 => {6: [Non religious], 4: [Hippies/High integrity and moral], 1: [Always undecided], }
+print("Clusters in all.blocks.6 => {6: [Non religious], 4: [Hippies/High integrity and moral], 1: [Always undecided], }")
 plot.clust.distr('all.blocks.6')
-# Sounds good, doesn't work [Try it out, it takes 20 second max]
-# multiplot(plotlist = graph_list, layout = matrix(1:225, nrow = 15, ncol = 15))
 ```
 
