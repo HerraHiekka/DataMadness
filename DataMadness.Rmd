@@ -1,6 +1,6 @@
 ---
 title: "Data Madness"
-author: "Martin Gassner, Henry Mauranen"
+author: "Martin Gassner, Henry Mauranen, Matteo Maggiolo"
 date: "17 March 2018"
 output: pdf_document
 ---
@@ -30,8 +30,17 @@ library( doBy )
 ```
 
 ## Introduction
+We worked on a dataset containing the recorded answers to a suvey about morality.
 
+The questions we would like to adress are as follows:
 
+1. Can we find out ways to interpret the answers of each block as one value?
+
+2. Can we identify distinct clusters within different blocks of questions?
+
+3. Based on these values and/or clusters, are there clear correlations between interpretable blocks?
+
+4. Can we link the clusters to personal metrics?
 
 ```{r data_import}
 load("./measuringMoralityDuke/MMdata_merged.rdata")
@@ -73,6 +82,8 @@ block17 <- "Dov_game"
 blocks <- list(block1,block2,block3,block4,block5,block6,block7,block8,block9,block10,block11,block12,block13,block14,block15,block16,block17)
 ```
 
+# EM clustering
+
 ```{r clustering, warning=FALSE}
 # Suppressing warnings because Loess causes problems with spms
 
@@ -93,13 +104,34 @@ MMdata.imputed[unlist(blocks)] <- apply(MMdata.imputed[unlist(blocks)], 2, funct
 
 fullCluster <- Mclust(MMdata.imputed[unlist(blocks)])
 
-MMdata_merged[unlist(blocks)] %>%
+# MMdata_merged[unlist(blocks)] %>%
+#  mutate(classification=fullCluster$classification) %>%
+#  melt(id=c("classification"))  %>%
+#  group_by(classification,variable,value) %>%
+#  count() %>%
+#  group_by(classification,variable) %>%
+#  summarise(variance=var(rep(value,n)))
+
+MMdata.cluster.variances <- MMdata_merged[unlist(blocks)] %>%
   mutate(classification=fullCluster$classification) %>%
   melt(id=c("classification"))  %>%
   group_by(classification,variable,value) %>%
   count() %>%
   group_by(classification,variable) %>%
   summarise(variance=var(rep(value,n)))
+
+MMdata.cluster.variances.counts <- MMdata.cluster.variances[,-2] %>%
+  group_by(classification) %>%
+  tally(variance)
+
+MMdata.cluster.variances.counts <- MMdata.cluster.variances.counts[-c(2,3,4,6),]
+
+MMdata.cluster.variances.counts$classification <- as.factor(MMdata.cluster.variances.counts$classification)
+
+ggplot(MMdata.cluster.variances.counts, aes(x=classification, y=n,fill=classification)) + 
+  geom_col() +
+  ylab( "sums of Var per cluster") +
+  ggitle( "variances per cluster" )
 
 # Printing all summaires for all clusters
 #lapply(mclusters, summary, parameters=TRUE)
@@ -113,6 +145,7 @@ MMdata_merged[unlist(blocks)] %>%
 #})
 ```
 
+# PCA weighting + kmeans
 
 To obtain a weighting for each block of questions
 
@@ -402,6 +435,7 @@ grid.arrange( grobs=pvars.plots[ 5:7 ], ncol=2 )
 
 ```
 
+# k-modes
 
 ```{r kmodes_methods}
 # Define methods for the clusters
@@ -596,3 +630,70 @@ print("Clusters in all.blocks.6 => {6: [Non religious], 4: [Hippies/High integri
 plot.clust.distr('all.blocks.6')
 ```
 
+# Conclusions
+
+1. Can we find out ways to interpret the answers of each block as one value?
+
+Yes we can! We used PCA to obtain weights from the sum of loadings per variable weighted by the variance explained by each principal component.
+
+2. Can we identify distinct clusters within different blocks of questions?
+
+Yes we can! We performed k-modes clustering on a per block basis and obtained the cetroids of each cluster. We then related the results with the questions presented in the questionnaire.
+
+3. Based on these values and/or clusters, are there clear correlations between interpretable blocks?
+
+Sometimes. Our results show that the correlations between variables are not particularly strong. However we could find correlations between individual clusters for specific blocks. Additionally, there was often overlap between the clusters and only few variables clearly separated a cluster from the others.
+
+4. Are there interpretable types of individuals?
+
+Based on the per-block basis clustering we could find pairs of clusters correlated over multiple blocks. This established a link between blocks of questions for a specific cluster, such as:
+
+- a group of individuals never taking a side
+
+- a group of individuals with high answers to integrity and ethical values questions
+
+Given our clustering on the entire dataset we could find 4 types
+
+1. Materialistic pragmatists
+
+2. Individualists
+
+3. Average people
+
+4. Saints
+
+4. Can we link the clusters to personal metrics?
+
+Yes, we can! Corresponding to the previous 4 types
+
+- Materialistic pragmatists
+
+  + mostly young
+  
+  + educated
+  
+  + male
+  
+  + abstain from marriage
+
+- Individualists
+
+  + ethnically more diverse
+  
+  + less tertiary education
+  
+  + fewer living in detached houses
+
+- Average people
+  
+  + guess what... average - everywhere!
+
+- Saints
+  
+  + most likely to be married
+  
+  + least likely to have an appartment
+  
+  + most likely to be living in detached houses
+  
+  + more women
